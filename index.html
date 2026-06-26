@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>Badminton Shuffle</title>
 <style>
   :root{
@@ -16,6 +17,7 @@
     --amber:#FFB648;
     --red:#FF6B6B;
     --green:#6FE3A8;
+    --cyan:#5BC8E8;
     --mono: 'SF Mono', 'Consolas', 'Menlo', monospace;
   }
   *{box-sizing:border-box;}
@@ -61,12 +63,64 @@
   .level-desc{font-size:13px; line-height:1.4;}
   .top-bar{display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; gap:12px; flex-wrap:wrap;}
   .top-bar h1{margin:0;}
+  .top-bar-right{display:flex; align-items:center; gap:14px; flex-wrap:wrap;}
+  .skill-toggle{
+    display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted);
+    font-family:var(--mono); cursor:pointer; user-select:none;
+  }
+  .skill-toggle input{width:15px; height:15px; accent-color:var(--lime); cursor:pointer;}
+  body.hide-skill .skill-ui{display:none !important;}
   .howto-btn{background:var(--panel-line); color:var(--chalk); border:1px solid var(--panel-line); border-radius:7px; padding:8px 14px; font-size:12.5px; font-weight:700; cursor:pointer; flex-shrink:0;}
   .howto-btn:hover{background:#33404C;}
   .howto-section{margin-bottom:18px;}
   .howto-section h4{font-size:13px; margin:0 0 6px; color:var(--lime);}
   .howto-section ul{margin:0; padding-left:18px; font-size:13px; line-height:1.5;}
   .howto-section li{margin-bottom:4px;}
+
+/* ---------------- Mobile (phones) ---------------- */
+@media (max-width: 600px) {
+  body{padding:16px 10px 50px;}
+  .wrap{max-width:100%;}
+  h1{font-size:22px;}
+  .top-bar{gap:8px;}
+  .howto-btn{font-size:11px; padding:6px 10px;}
+  .guide-btn{width:24px; height:24px;}
+
+  .panel{padding:14px 14px 16px;}
+  .panel-head{flex-wrap:wrap; row-gap:8px;}
+  .panel-head-left{flex-wrap:wrap; gap:8px; row-gap:6px;}
+  .panel-head-left h2{font-size:13px; width:100%;}
+
+  /* bigger touch targets, inputs at 16px to stop iOS auto-zoom on focus */
+  input[type=number], input[type=text], input[type=time], select{font-size:16px;}
+  .roster-row input[type=checkbox]{width:20px; height:20px;}
+  .x, .clear-x, .danger-ghost{padding:6px 8px; font-size:13px;}
+
+  .roster-row{flex-wrap:wrap; row-gap:8px; padding:10px;}
+  .roster-row .rname{order:1; flex:1 1 auto; min-width:50%; font-size:14px;}
+  .roster-row input[type=checkbox]{order:0;}
+  .roster-row > .x{order:2; margin-left:auto;}
+  .roster-row .skill-wrap{order:3; flex-basis:calc(50% - 5px); justify-content:space-between;}
+  .roster-row .skill-wrap input{width:60px;}
+
+  .row{gap:8px;}
+  .field{min-width:0;}
+
+  .modal-overlay{padding:10px;}
+  .modal-box{width:100%; max-width:100%; padding:18px 16px; max-height:88vh;}
+  .level-row{flex-wrap:wrap; row-gap:4px;}
+  .level-num{width:auto;}
+
+  .compact-court{flex-wrap:wrap; row-gap:6px;}
+  .compact-court-label{flex-basis:100%; width:auto;}
+  .compact-side{min-width:42%;}
+  .compact-vs{order:0;}
+  .compact-player-card{max-width:100%; font-size:13px;}
+
+  .court-card{padding:8px 10px 10px;}
+  .time-banner{font-size:12px;}
+  .gen-btn-wrap button{width:100%;}
+}
   .panel h2{font-size:12px; text-transform:uppercase; letter-spacing:0.12em; color:var(--muted); margin:0 0 14px; font-weight:700;}
   .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
   input[type=text], input[type=number]{
@@ -122,6 +176,7 @@
   .pair-row span{font-family:var(--mono); font-size:12px;}
   .pair-row.excl span{color:var(--amber);}
   .pair-row.must span{color:var(--green);}
+  .pair-row.never span{color:var(--cyan);}
   .gen-btn-wrap{display:flex; justify-content:center; margin:22px 0;}
   .gen-btn-wrap button{font-size:15px; padding:13px 32px; border-radius:9px;}
   .warn{background:rgba(255,182,72,0.1); border:1px solid var(--amber); color:var(--amber); padding:10px 12px; border-radius:7px; font-size:12.5px; margin-bottom:14px; font-family:var(--mono);}
@@ -172,26 +227,35 @@
   footer{text-align:center; color:var(--muted); font-size:11px; margin-top:30px; font-family:var(--mono);}
 </style>
 </head>
-<body>
+<body class="hide-skill">
 <div class="wrap">
   <div class="top-bar">
     <h1>Badminton Shuffle</h1>
-    <button class="howto-btn" id="howToBtn">How To Use</button>
+    <div class="top-bar-right">
+      <label class="skill-toggle">
+        <input type="checkbox" id="showSkillToggle">
+        Show Skill Ratings
+      </label>
+      <button class="howto-btn" id="howToBtn">How To Use</button>
+    </div>
   </div>
 
   <div class="panel" id="panel-players">
     <div class="panel-head">
       <div class="panel-head-left">
         <h2>Player Directory <span class="count-badge" id="playerCount">0</span></h2>
-        <button class="guide-btn" id="skillGuideBtn" title="Skill rating guide">?</button>
+        <button class="guide-btn skill-ui" id="skillGuideBtn" title="Skill rating guide">?</button>
         <button class="howto-btn" id="loadDefaultsBtn" style="font-size:11px; padding:5px 10px;">Load Default Roster</button>
+        <button class="howto-btn" id="syncSheetBtn" style="font-size:11px; padding:5px 10px;">Sync From Sheet</button>
+        <button class="howto-btn" id="openSheetBtn" style="font-size:11px; padding:5px 10px;">Open Sheet</button>
+        <span id="sheetSyncStatus" style="font-size:11px; font-family:var(--mono); color:var(--muted);"></span>
       </div>
       <span class="chevron">▾</span>
     </div>
     <div class="panel-body">
     <div class="row">
       <input type="text" id="nameInput" placeholder="Player name" style="flex:1; min-width:140px;">
-      <div class="field" style="flex-direction:row; align-items:center; gap:6px;">
+      <div class="field skill-ui" style="flex-direction:row; align-items:center; gap:6px;">
         <label style="margin:0;">Skill</label>
         <input type="number" id="skillInput" class="skill" min="1" max="7" step="0.5" value="3">
       </div>
@@ -236,7 +300,7 @@
         <label>Start Time</label>
         <input type="time" id="startTimeInput" value="19:00">
       </div>
-      <div class="field">
+      <div class="field skill-ui">
         <label>Max Skill Gap</label>
         <input type="number" id="maxGapInput" class="wide" step="0.5" min="0" value="2" placeholder="off">
       </div>
@@ -259,6 +323,25 @@
     </div>
     <div class="pair-list" id="exclList"></div>
     <div class="msg error" id="exclMsg"></div>
+    <div class="hint">they will never be placed on the same court at all — not as teammates, not as opponents — across all courts, every round.</div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-never">
+    <div class="panel-head">
+      <div class="panel-head-left"><h2>Never Partners</h2></div>
+      <span class="chevron">▾</span>
+    </div>
+    <div class="panel-body">
+    <div class="row">
+      <select id="neverA"></select>
+      <span style="color:var(--muted)">should never be teamed with</span>
+      <select id="neverB"></select>
+      <button id="addNeverBtn">Add</button>
+    </div>
+    <div class="pair-list" id="neverList"></div>
+    <div class="msg error" id="neverMsg"></div>
+    <div class="hint">they can still end up on the same court as opponents — this only stops them being doubles teammates. No effect in singles.</div>
     </div>
   </div>
 
@@ -320,10 +403,12 @@ let directory = [];   // {id, name, skill}
 let activeIds = new Set();
 let exclusions = [];
 let mustPairs = [];
+let neverPartners = [];
 let nextId = 1;
 let sitoutPointer = 0;
 let format = 'doubles';
 let viewMode = 'compact';
+let showSkill = false;
 let lastScheduleText = '';
 let lastRounds = null, lastWarnings = [], lastFormat = 'doubles';
 const MATCH_MIN = 10;
@@ -337,10 +422,14 @@ const exclA = document.getElementById('exclA');
 const exclB = document.getElementById('exclB');
 const mustA = document.getElementById('mustA');
 const mustB = document.getElementById('mustB');
+const neverA = document.getElementById('neverA');
+const neverB = document.getElementById('neverB');
 const exclList = document.getElementById('exclList');
 const mustList = document.getElementById('mustList');
+const neverList = document.getElementById('neverList');
 const exclMsg = document.getElementById('exclMsg');
 const mustMsg = document.getElementById('mustMsg');
+const neverMsg = document.getElementById('neverMsg');
 const output = document.getElementById('output');
 const courtsInput = document.getElementById('courtsInput');
 const matchesInput = document.getElementById('matchesInput');
@@ -355,10 +444,10 @@ function saveState(){
   try{
     const collapsedPanels = [...document.querySelectorAll('.panel.collapsed')].map(p=>p.id);
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      directory, activeIds:[...activeIds], exclusions, mustPairs, nextId, format,
+      directory, activeIds:[...activeIds], exclusions, mustPairs, neverPartners, nextId, format,
       courts: courtsInput.value, matches: matchesInput.value,
       startTime: startTimeInput.value, viewMode, maxGap: maxGapInput.value,
-      collapsedPanels
+      collapsedPanels, showSkill
     }));
   }catch(e){ /* storage unavailable, fail silently */ }
 }
@@ -372,6 +461,7 @@ function loadState(){
     activeIds = new Set(data.activeIds || directory.map(p=>p.id));
     exclusions = data.exclusions || [];
     mustPairs = data.mustPairs || [];
+    neverPartners = data.neverPartners || [];
     nextId = data.nextId || (directory.length+1);
     format = data.format || 'doubles';
     if(data.courts) courtsInput.value = data.courts;
@@ -379,6 +469,9 @@ function loadState(){
     if(data.startTime) startTimeInput.value = data.startTime;
     if(data.maxGap) maxGapInput.value = data.maxGap;
     if(data.viewMode) viewMode = data.viewMode;
+    showSkill = !!data.showSkill; // default false (hidden) if never saved
+    document.body.classList.toggle('hide-skill', !showSkill);
+    document.getElementById('showSkillToggle').checked = showSkill;
     (data.collapsedPanels||[]).forEach(id=>{
       const el = document.getElementById(id);
       if(el) el.classList.add('collapsed');
@@ -392,6 +485,14 @@ function loadState(){
     return true;
   }catch(e){ return false; }
 }
+
+document.getElementById('showSkillToggle').addEventListener('change', (e)=>{
+  showSkill = e.target.checked;
+  document.body.classList.toggle('hide-skill', !showSkill);
+  renderRoster();
+  if(lastRounds) render(lastRounds, lastWarnings, lastFormat);
+  saveState();
+});
 
 document.getElementById('formatToggle').addEventListener('click', (e)=>{
   const btn = e.target.closest('button');
@@ -432,10 +533,15 @@ function parseMaxConsec(v){
   return (isNaN(n) || n<1) ? null : n;
 }
 
+function makeId(name){
+  return 'p_' + name.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g,'');
+}
+
 function addPlayer(name, skill, maxConsec){
   name = name.trim();
   if(!name) return;
-  const id = nextId++;
+  const id = makeId(name);
+  if(directory.some(p=>p.id===id)){ return; } // duplicate name, don't create a colliding id
   directory.push({id, name, skill: clampSkill(skill), maxConsec: parseMaxConsec(maxConsec)});
   activeIds.add(id);
   renderRoster();
@@ -456,6 +562,7 @@ function removePlayer(id){
   activeIds.delete(id);
   exclusions = exclusions.filter(pair=>pair[0]!==id && pair[1]!==id);
   mustPairs = mustPairs.filter(pair=>pair[0]!==id && pair[1]!==id);
+  neverPartners = neverPartners.filter(pair=>pair[0]!==id && pair[1]!==id);
   renderRoster();
   saveState();
 }
@@ -500,7 +607,7 @@ function renderRoster(){
     row.innerHTML = `
       <input type="checkbox" ${isActive?'checked':''}>
       <span class="rname">${escapeHtml(p.name)}</span>
-      <div class="skill-wrap">Skill <input type="number" class="skill" min="1" max="7" step="0.5" value="${p.skill}"></div>
+      <div class="skill-wrap skill-ui">Skill <input type="number" class="skill" min="1" max="7" step="0.5" value="${p.skill}"></div>
       <div class="skill-wrap">Rest After <input type="number" class="skill" min="1" value="${p.maxConsec||''}" placeholder="off">${p.maxConsec ? '<span class="clear-x" title="turn off rest cap">✕</span>' : ''}</div>
       <span class="x" style="cursor:pointer; color:var(--muted); font-size:12px;">remove</span>
     `;
@@ -517,11 +624,12 @@ function renderRoster(){
   renderPairSelects();
   renderExclList();
   renderMustList();
+  renderNeverList();
 }
 
 function renderPairSelects(){
   const active = getActivePlayers();
-  [exclA, exclB, mustA, mustB].forEach(sel=>{
+  [exclA, exclB, mustA, mustB, neverA, neverB].forEach(sel=>{
     const prev = sel.value;
     sel.innerHTML = active.map(p=>`<option value="${p.id}">${escapeHtml(p.name)}</option>`).join('');
     if(prev) sel.value = prev;
@@ -535,7 +643,7 @@ function showMsg(el, text){
 }
 
 document.getElementById('addExclBtn').addEventListener('click', ()=>{
-  const a = parseInt(exclA.value), b = parseInt(exclB.value);
+  const a = exclA.value, b = exclB.value;
   if(!a || !b){ showMsg(exclMsg, 'pick two different players first'); return; }
   if(a===b){ showMsg(exclMsg, 'pick two different players'); return; }
   if(mustPairs.some(pair => sameP(pair,a,b))){ showMsg(exclMsg, 'these two are marked "must play together" — remove that first'); return; }
@@ -546,13 +654,25 @@ document.getElementById('addExclBtn').addEventListener('click', ()=>{
 });
 
 document.getElementById('addMustBtn').addEventListener('click', ()=>{
-  const a = parseInt(mustA.value), b = parseInt(mustB.value);
+  const a = mustA.value, b = mustB.value;
   if(!a || !b){ showMsg(mustMsg, 'pick two different players first'); return; }
   if(a===b){ showMsg(mustMsg, 'pick two different players'); return; }
   if(exclusions.some(pair => sameP(pair,a,b))){ showMsg(mustMsg, 'these two are on the keep-apart list — remove that first'); return; }
+  if(neverPartners.some(pair => sameP(pair,a,b))){ showMsg(mustMsg, 'these two are on the "never partners" list — remove that first'); return; }
   if(mustPairs.some(pair => sameP(pair,a,b))){ showMsg(mustMsg, 'already on this list'); return; }
   mustPairs.push([a,b]);
   renderMustList();
+  saveState();
+});
+
+document.getElementById('addNeverBtn').addEventListener('click', ()=>{
+  const a = neverA.value, b = neverB.value;
+  if(!a || !b){ showMsg(neverMsg, 'pick two different players first'); return; }
+  if(a===b){ showMsg(neverMsg, 'pick two different players'); return; }
+  if(mustPairs.some(pair => sameP(pair,a,b))){ showMsg(neverMsg, 'these two are marked "must play together" — remove that first'); return; }
+  if(neverPartners.some(pair => sameP(pair,a,b))){ showMsg(neverMsg, 'already on this list'); return; }
+  neverPartners.push([a,b]);
+  renderNeverList();
   saveState();
 });
 
@@ -592,6 +712,23 @@ function renderMustList(){
   });
 }
 
+function renderNeverList(){
+  neverList.innerHTML='';
+  neverPartners.forEach((pair, idx)=>{
+    const pa = directory.find(p=>p.id===pair[0]);
+    const pb = directory.find(p=>p.id===pair[1]);
+    if(!pa || !pb) return;
+    const row = document.createElement('div');
+    row.className='pair-row never';
+    row.innerHTML = `<span>${escapeHtml(pa.name)} ✕🤝 ${escapeHtml(pb.name)}</span>`;
+    const btn = document.createElement('button');
+    btn.className='danger-ghost'; btn.textContent='remove';
+    btn.addEventListener('click', ()=>{ neverPartners.splice(idx,1); renderNeverList(); saveState(); });
+    row.appendChild(btn);
+    neverList.appendChild(row);
+  });
+}
+
 function escapeHtml(s){
   return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -599,6 +736,9 @@ function escapeHtml(s){
 function pairKey(a,b){ return a<b ? a+'_'+b : b+'_'+a; }
 function isExcludedPair(a,b){
   return exclusions.some(pair => (pair[0]===a&&pair[1]===b)||(pair[0]===b&&pair[1]===a));
+}
+function isNeverPartnersPair(a,b){
+  return neverPartners.some(pair => (pair[0]===a&&pair[1]===b)||(pair[0]===b&&pair[1]===a));
 }
 
 function shuffle(arr){
@@ -672,6 +812,8 @@ function buildRoundCourts(activePlayers, fmt, courts, perMatch, partnerHistory, 
             const skillB = (teamB[0].skill+teamB[1].skill)/2;
             if(Math.abs(skillA-skillB) > maxGap) score += 1000;
           }
+          if(isNeverPartnersPair(teamA[0].id, teamA[1].id)) score += 1000;
+          if(isNeverPartnersPair(teamB[0].id, teamB[1].id)) score += 1000;
           score += (partnerHistory[pairKey(teamA[0].id,teamA[1].id)]||0)*10;
           score += (partnerHistory[pairKey(teamB[0].id,teamB[1].id)]||0)*10;
           if(score < bestSplitScore){ bestSplitScore = score; bestSplit = split; }
@@ -831,7 +973,7 @@ function generate(){
 
 function nameWithSkill(p){
   const display = p.name.length>9 ? p.name.slice(0,8)+'…' : p.name;
-  return `${display} (${p.skill})`;
+  return showSkill ? `${display} (${p.skill})` : display;
 }
 
 function courtSVG(court, fmt){
@@ -1056,7 +1198,10 @@ const HOWTO = [
     'Set Max Skill Gap if you want the shuffle to avoid lopsided matchups. Leave it blank to turn that off entirely.'
   ]},
   {title:'Keep Apart', points:[
-    'Pick two people who shouldn\'t end up in the same match together, for any reason.'
+    'Pick two people who should never end up on the same court at all — not as teammates, not as opponents — for any reason.'
+  ]},
+  {title:'Never Partners', points:[
+    'Pick two people who should never be doubles teammates. They can still end up as opponents on the same court — this only blocks them being on the same team. No effect in singles, since there are no teammates there.'
   ]},
   {title:'Must Play Together', points:[
     'Pick two people who should share at least one match this session — as teammates in doubles, or opponents in singles.'
@@ -1105,12 +1250,13 @@ const DEFAULT_ROSTER = [
   {name:'Alviando',  skill:1.5, maxConsec:null},
   {name:'Jason',     skill:1.5, maxConsec:null},
   {name:'Jun Feng',  skill:1.5, maxConsec:null},
-  {name:'Jun Kang',  skill:1.5, maxConsec:null}
+  {name:'Jun Kang',  skill:1.5, maxConsec:null},
+  {name:'Kieran',    skill:2,   maxConsec:null}
 ];
 
 function applyDefaultRoster(confirmFirst){
   if(confirmFirst && !window.confirm('Replace the current roster and constraints with the default list? This cannot be undone.')) return;
-  directory = []; activeIds = new Set(); nextId = 1; exclusions = []; mustPairs = [];
+  directory = []; activeIds = new Set(); nextId = 1; exclusions = []; mustPairs = []; neverPartners = [];
   DEFAULT_ROSTER.forEach(p => addPlayer(p.name, p.skill, p.maxConsec));
   renderRoster();
   saveState();
@@ -1121,6 +1267,160 @@ document.getElementById('loadDefaultsBtn').addEventListener('click', (e)=>{
   applyDefaultRoster(true);
 });
 
+// ---------------------------------------------------------------
+// GOOGLE SHEET SYNC (optional)
+//
+// To use this: make a Google Sheet with a header row containing
+// "Name", "Skill", "RestAfter" (column order doesn't matter, case
+// doesn't matter). Set sharing to "Anyone with the link -> Viewer".
+// Then fill in SHEET_ID and SHEET_GID below.
+//
+// SHEET_ID is the long string in the sheet's URL between /d/ and /edit:
+//   https://docs.google.com/spreadsheets/d/THIS_PART_HERE/edit
+// SHEET_GID is the number after "gid=" at the end of the URL
+// (it's already in the address bar, e.g. ...#gid=0).
+//
+// Leave SHEET_ID blank to skip sheet sync entirely — the app will
+// just use the local DEFAULT_ROSTER above, same as before.
+// ---------------------------------------------------------------
+const SHEET_ID = '1sKbOUvZqb91hpDvff9aEhEMaF8mEX2UDeOCInQUe85U';
+const SHEET_GID = '0';
+
+function parseCSV(text){
+  return text.trim().split(/\r?\n/).map(line=>{
+    const result = [];
+    let cur='', inQuotes=false;
+    for(let i=0;i<line.length;i++){
+      const ch = line[i];
+      if(ch === '"'){ inQuotes = !inQuotes; continue; }
+      if(ch === ',' && !inQuotes){ result.push(cur); cur=''; continue; }
+      cur += ch;
+    }
+    result.push(cur);
+    return result.map(s=>s.trim());
+  });
+}
+
+function mergeDirectoryFromRows(rows){
+  if(!rows.length) throw new Error('empty sheet');
+  const header = rows[0].map(h=>h.toLowerCase().replace(/\s+/g,''));
+  const nameIdx = header.indexOf('name');
+  const skillIdx = header.indexOf('skill');
+  const restIdx = header.indexOf('restafter');
+  if(nameIdx === -1) throw new Error('no "Name" column found');
+
+  const newDirectory = [];
+  for(let i=1;i<rows.length;i++){
+    const row = rows[i];
+    const name = (row[nameIdx]||'').trim();
+    if(!name) continue;
+    const id = makeId(name);
+    if(newDirectory.some(p=>p.id===id)) continue; // duplicate name in sheet, keep first
+    newDirectory.push({
+      id, name,
+      skill: skillIdx>-1 ? clampSkill(row[skillIdx]) : 3,
+      maxConsec: restIdx>-1 ? parseMaxConsec(row[restIdx]) : null
+    });
+  }
+  if(!newDirectory.length) throw new Error('no valid player rows found');
+
+  const newIds = new Set(newDirectory.map(p=>p.id));
+  const oldActiveIds = activeIds;
+  const newActiveIds = new Set();
+  newDirectory.forEach(p=>{
+    // preserve active/inactive state for players that already existed; default new ones to active
+    if(directory.some(d=>d.id===p.id)) { if(oldActiveIds.has(p.id)) newActiveIds.add(p.id); }
+    else newActiveIds.add(p.id);
+  });
+
+  directory = newDirectory;
+  activeIds = newActiveIds;
+  exclusions = exclusions.filter(pair => newIds.has(pair[0]) && newIds.has(pair[1]));
+  mustPairs = mustPairs.filter(pair => newIds.has(pair[0]) && newIds.has(pair[1]));
+  neverPartners = neverPartners.filter(pair => newIds.has(pair[0]) && newIds.has(pair[1]));
+}
+
+function loadGvizJSONP(timeoutMs){
+  return new Promise((resolve, reject)=>{
+    const cbName = '__gvizCb_' + Date.now() + '_' + Math.floor(Math.random()*100000);
+    let finished = false;
+    const script = document.createElement('script');
+    const cleanup = ()=>{
+      delete window[cbName];
+      if(script.parentNode) script.parentNode.removeChild(script);
+      clearTimeout(timer);
+    };
+    window[cbName] = (response)=>{
+      if(finished) return;
+      finished = true;
+      cleanup();
+      if(!response || response.status !== 'ok'){
+        reject(new Error('sheet returned status: ' + (response && response.status)));
+        return;
+      }
+      resolve(response.table);
+    };
+    script.src = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?gid=${SHEET_GID}&tqx=responseHandler:${cbName}`;
+    script.onerror = ()=>{
+      if(finished) return;
+      finished = true;
+      cleanup();
+      reject(new Error('could not load sheet — check sharing is "Anyone with the link -> Viewer"'));
+    };
+    const timer = setTimeout(()=>{
+      if(finished) return;
+      finished = true;
+      cleanup();
+      reject(new Error('sheet request timed out'));
+    }, timeoutMs);
+    document.head.appendChild(script);
+  });
+}
+
+function gvizTableToRows(table){
+  if(!table || !table.cols) throw new Error('unexpected sheet response shape');
+  const header = table.cols.map(c => c.label || c.id || '');
+  const dataRows = (table.rows||[]).map(r =>
+    (r.c||[]).map(cell => (cell && cell.v != null) ? String(cell.v) : '')
+  );
+  return [header, ...dataRows];
+}
+
+async function syncFromSheet(silent){
+  const statusEl = document.getElementById('sheetSyncStatus');
+  if(!SHEET_ID){
+    if(!silent) statusEl.textContent = 'No sheet configured — edit SHEET_ID in the code to enable this.';
+    return false;
+  }
+  if(statusEl) statusEl.textContent = 'Syncing…';
+  try{
+    const table = await loadGvizJSONP(8000);
+    const rows = gvizTableToRows(table);
+    mergeDirectoryFromRows(rows);
+    renderRoster();
+    saveState();
+    if(statusEl) statusEl.textContent = '✓ synced just now';
+    return true;
+  }catch(e){
+    if(statusEl) statusEl.textContent = 'Sync failed — using last saved roster (' + e.message + ')';
+    return false;
+  }
+}
+
+document.getElementById('syncSheetBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  syncFromSheet(false);
+});
+
+document.getElementById('openSheetBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  if(!SHEET_ID){
+    document.getElementById('sheetSyncStatus').textContent = 'No sheet configured — edit SHEET_ID in the code to enable this.';
+    return;
+  }
+  window.open(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit`, '_blank');
+});
+
 if(!loadState()){
   applyDefaultRoster(false);
 }
@@ -1128,6 +1428,7 @@ renderRoster();
 initCollapsible();
 initSkillGuide();
 initHowTo();
+syncFromSheet(true); // auto-sync on every load; silently does nothing if SHEET_ID isn't configured
 </script>
 </body>
 </html>
